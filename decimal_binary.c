@@ -1,4 +1,4 @@
-//imprimir o número decimal com 2 casas e ao lado o número binário
+//imprimir o nÃºmero decimal com 2 casas e ao lado o nÃºmero binÃ¡rio
 #include<stdio.h>
 
 void putdig(int num){
