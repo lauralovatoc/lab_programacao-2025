@@ -15,19 +15,45 @@ int getdig(){
   return dig;
 }
 
+char gettemp(){
+    int dig = getchar();
+    if(dig!='c' && dig!='C' && dig!='F' &&dig!='f'){
+        return gettemp();
+    }
+    int y = dig;
+    char x = y;
+    return x;
+}
+
 int get2dig(){
   return 10 * getdig() + getdig();
 }
 
-int converter(int temperatura){
+int get3dig(){
+  return get2dig()*10 + getdig();
+}
+
+int converter_C(int temperatura){
     return (temperatura*1.8)+32;
+}
+
+int converter_F(int temperatura){
+    return (temperatura-32)*0.555;
 }
 
 int main(){
    int temperatura;
-   puts("Digite a temperatura em Celsius");
-   temperatura = get2dig();
-   temperatura = converter(temperatura);
-   puts("A temperatura em Farenheit:");
+   char caractere;
+   puts("Digite c para Celsius e F para Farenheit:");
+   caractere = gettemp();
+   puts("Digite a temperatura:");
+   temperatura = get3dig();
+   if(caractere == 'c'|| caractere == 'C'){
+       temperatura = converter_C(temperatura);
+       puts("A temperatura em Farenheit:");
+   }else if (caractere == 'f' || caractere == 'F'){
+       temperatura = converter_F(temperatura);
+       puts("A temperatura em Celsius:");
+   }
    putnum(temperatura);
 }
