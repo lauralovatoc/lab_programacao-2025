@@ -15,14 +15,12 @@ int getdig(){
   return dig;
 }
 
-char getcharac(){
+int getcharac(){
     int dig = getchar();
     if(dig!='c' && dig!='C' && dig!='m' &&dig!='M'){
         return getcharac();
     }
-    int y = dig;
-    char x = y;
-    return x;
+    return dig;
 }
 
 int get2dig(){
@@ -42,7 +40,7 @@ int calcular_volume(int altura, int largura, int comprimento){ //recebe valor em
 }
 
 int main(){
-    char medidas;
+    int medidas;
     int largura, comprimento, profundidade;
     int volume;
     puts("capacidade de uma piscina");
