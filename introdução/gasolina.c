@@ -22,7 +22,7 @@ int get2dig(){
 int get3dig(){
   return get2dig()*10 + getdig();
 }
-
+/*
 int converter_metragem(int hm){ //converte hm em  km
     return hm/10;
 }
@@ -30,9 +30,10 @@ int converter_metragem(int hm){ //converte hm em  km
 int converter_moeda(int valor){
     return valor/100;
 }
-
+*/
 int gasolina_percurso(int gasolina, int consumo, int distancia){
-    return (distancia/consumo) * gasolina;
+    int litros = distancia * 10 / consumo;
+    return litros * gasolina /100;
 }
 
 
@@ -45,8 +46,8 @@ int main(){
     puts("digite a distancia a ser percorrida em Km:");
     distancia = get3dig();
     
-    consumo_medio = converter_metragem(consumo_medio);
-    valor = converter_moeda(valor);
+    //consumo_medio = converter_metragem(consumo_medio);
+    //valor = converter_moeda(valor);
     
     int valor_total = gasolina_percurso(valor, consumo_medio, distancia);
     puts("Para fazer a distancia digitada com o consumo medio do seu carro, você vai gastar R$");
