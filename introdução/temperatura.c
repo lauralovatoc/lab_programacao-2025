@@ -38,7 +38,7 @@ int converter_C(int temperatura){
 }
 
 int converter_F(int temperatura){
-    return (temperatura-32)*0.555;
+    return (temperatura-32)* 5 / 9;
 }
 
 int main(){
