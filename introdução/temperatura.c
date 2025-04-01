@@ -15,14 +15,12 @@ int getdig(){
   return dig;
 }
 
-char gettemp(){
+int gettemp(){
     int dig = getchar();
     if(dig!='c' && dig!='C' && dig!='F' &&dig!='f'){
         return gettemp();
     }
-    int y = dig;
-    char x = y;
-    return x;
+    return dig;
 }
 
 int get2dig(){
@@ -43,7 +41,7 @@ int converter_F(int temperatura){
 
 int main(){
    int temperatura;
-   char caractere;
+   int caractere;
    puts("Digite c para Celsius e F para Farenheit:");
    caractere = gettemp();
    puts("Digite a temperatura:");
