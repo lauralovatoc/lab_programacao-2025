@@ -5,7 +5,8 @@
 
 int main(){
     for(int valor=32;valor<=126;valor++){
+        printf("Codigo: %d   Caractere: ",valor);
         putchar(valor);
-        putchar(' ');
+        putchar('\n');
     }
 }
