@@ -10,7 +10,7 @@ int main(){
     int decimal =32;
     //todos equivalem a 32
     while(decimal<=126){
-        printf("Codigo: %d  Hexadecimal: %h  Binario: %b  Octal: %o  Caractere: ",decimal, hexadecimal, binario, octal);
+        printf("Decimal: %d  Hexadecimal: %x  Binario: %b  Octal: %o  Caractere: ",decimal, hexadecimal, binario, octal);
         putchar(decimal);
         putchar('\n');
         decimal++;
