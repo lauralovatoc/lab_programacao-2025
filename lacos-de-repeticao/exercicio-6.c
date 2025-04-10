@@ -1,16 +1,20 @@
 //Faça uma função que imprime a tabuada do número recebido em argumento, no seguinte formato (caso receba 2 como argumento):
 #include<stdio.h>
-#include<stdlib.h>
+
+void imprime_tabuada(int n){
+    int cont=1;
+    printf("\tTabuada do %d\n", n);
+    while(cont<=9){
+       printf("\t%dx%d = %2d\n", n, cont, n*cont);
+       cont++;
+   }
+}
 
 int main(){
-   int num, cont=1;
+   int num;
    
    printf("Digite um numero de 1 a 9:\n");
    scanf("%d",&num);
    
-   printf("\tTabuada do %d\n", num);
-   while(cont<=9){
-       printf("\t%dx%d = %2d\n", num, cont, num*cont);
-       cont++;
-   }
+   imprime_tabuada(num);
 }
