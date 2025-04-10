@@ -29,3 +29,32 @@ int main(){
         cont++;
     }
 }
+
+/* degrade invertido
+#include<stdio.h>
+
+void cor_fundo(int r, int g, int b){
+    printf("%c[48;2;%d;%d;%dm", 27, r, g, b);
+}
+
+void cor_normal(){
+    printf("%c[0m", 27);
+}
+
+void imprimir_linha(int r, int g, int b){
+    cor_fundo(r*16,g*16,b*16);
+    for(int i=0; i<32;i++){
+        putchar(' ');
+    }
+    putchar('\n');
+    cor_normal();
+}
+
+int main(){
+    int cont=16;
+    while(cont>=1){
+        imprimir_linha(cont,cont,cont);
+        cont--;
+    }
+}
+*/
