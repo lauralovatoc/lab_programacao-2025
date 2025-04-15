@@ -24,8 +24,8 @@ int calcula_asteriscos(int linha, int char_linha){
 }
 
 //calcular pontos
-int calcular_pontos(int asteriscos, int char_linha){
-    return char_linha - asteriscos;
+int calcular_pontos(int altura, int linha){
+    return (altura- linha)*2;
 }
 //desenha a linha
 void print_linha(int pontos, int asteriscos){
@@ -36,9 +36,9 @@ void print_linha(int pontos, int asteriscos){
 }
 
 //calcular oq precisa e imprimir a linha
-void imprimir_linha(int linha, int caracteres_linha){
+void imprimir_linha(int linha, int caracteres_linha, int altura){
     int asteriscos = calcula_asteriscos(linha, caracteres_linha);
-    int pontos = calcular_pontos(asteriscos, caracteres_linha);
+    int pontos = calcular_pontos(altura, linha);
 
     print_linha(pontos, asteriscos);
 }
@@ -49,7 +49,7 @@ void desenhar_triangulo(int h){
     int caracteres_linha = h + (h-1);
 
     while(linha<=h){
-        imprimir_linha(linha, caracteres_linha);
+        imprimir_linha(linha, caracteres_linha, h);
 
         linha++;
         putchar('\n');
