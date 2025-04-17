@@ -6,6 +6,9 @@ bool verifica_primos(int num){
     int cont=1, sum=0;
 
     while(cont<num){
+        if(sum>1){
+            return false;
+        }
         if(num%cont==0){
             sum += cont;
         }
@@ -14,8 +17,6 @@ bool verifica_primos(int num){
 
     if(sum==1){
         return true;
-    }else {
-        return false;
     }
 }
 
