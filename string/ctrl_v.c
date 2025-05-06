@@ -9,14 +9,12 @@ void ctrl_v(char str[], int index, char substring[]){
 
     int cont = tam_str+index+tam_sub;
 
-    //colocar o texto original depois de onde a substring entra
-    /*
+    //colocar o texto original depois de onde a substring entra    /*
     for(int i=index;i<=tam_str;i++){
         str[cont] = str[i];
         cont++;
     }
     */
-
     for(int i=index+tam_str;i>=index;i--){
         str[cont] = str[i];
         cont--;
