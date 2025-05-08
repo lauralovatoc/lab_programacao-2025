@@ -4,15 +4,16 @@
 #include <stdio.h>
 
 void ctrl_v(char str[], int index, char substring[]){
-    int tam_sub = strlen(substring);
+   int tam_sub = strlen(substring);
     int tam_str = strlen(str);
 
-    int cont = tam_str+index+tam_sub;
+    if(tam_sub + tam_str > 100){
+        return;
+    }
 
-    //colocar o texto original depois de onde a substring entra 
-    for(int i=index+tam_str;i>=index;i--){
-        str[cont] = str[i];
-        cont--;
+    //colocar o texto original depois de onde a substring entra
+    for(int i=tam_str;i>=index;i--){
+        str[i+tam_sub] = str[i];
     }
 
 
