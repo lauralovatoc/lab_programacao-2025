@@ -7,7 +7,7 @@ void ctrl_v(char str[], int index, char substring[]){
    int tam_sub = strlen(substring);
     int tam_str = strlen(str);
 
-    if(tam_sub + tam_str > 100){
+    if(tam_sub + tam_str >=  100){
         return;
     }
 
