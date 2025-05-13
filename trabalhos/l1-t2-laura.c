@@ -55,83 +55,99 @@ bool vitoria(int linhas, int colunas, int matriz[][colunas]){
     return true;
 }
 
-//mover
-bool mover(int linhas, int colunas, int matriz[][colunas], char caractere){
+/* inicio funcoes WASD -- movimentos no tabuleiro */
+bool mover_cima_W(int linhas, int colunas, int matriz[][colunas]){
     int aux; //variavel para auxiliar movimentos do tabuleiro
 
     //encontrar coordenadas do 0
     int linha_zero = posicao_zero('i',linhas, colunas, matriz);
     int coluna_zero = posicao_zero('j',linhas, colunas, matriz);
 
-    //verificar movimento escolhido (WASD) e se ele esta valido para o tabuleiro atual
-    if(caractere == 'S'){
-        //para mover para CIMA, deve ter algo embaixo do zero
-        if(linha_zero==3) //invalido
+    if(linha_zero==0) //movimento invalido
             return false;
 
-        aux = matriz[linha_zero][coluna_zero];
-        matriz[linha_zero][coluna_zero]  = matriz[linha_zero+1][coluna_zero];
-        matriz[linha_zero+1][coluna_zero] = aux;
-        //origem : coordenadas do zero
-        //destino: linha_zero + 1(abaixo), coluna mesma
-    }
+    //origem : coordenadas do zero
+    //destino: linha_zero - 1(acima), mesma coluna
+    aux = matriz[linha_zero][coluna_zero];
+    matriz[linha_zero][coluna_zero]  = matriz[linha_zero-1][coluna_zero];
+    matriz[linha_zero-1][coluna_zero] = aux;
 
-    if(caractere == 'W'){
-        //para mover para BAIXO, deve ter algo acima do zero
-        if(linha_zero==0) //invalido
+    return true;
+
+}
+
+bool mover_baixo_S(int linhas, int colunas, int matriz[][colunas]){
+    int aux;
+    int linha_zero = posicao_zero('i',linhas, colunas, matriz);
+    int coluna_zero = posicao_zero('j',linhas, colunas, matriz);
+
+    if(linha_zero==3) //invalido
             return false;
 
-        aux = matriz[linha_zero][coluna_zero];
-        matriz[linha_zero][coluna_zero]  = matriz[linha_zero-1][coluna_zero];
-        matriz[linha_zero-1][coluna_zero] = aux;
-        //origem : coordenadas do zero
-        //destino: linha_zero - 1(acima), coluna mesma
-    }
+    //destino:linha_zero +1 (abaixo), mesma coluna
+    aux = matriz[linha_zero][coluna_zero];
+    matriz[linha_zero][coluna_zero]  = matriz[linha_zero+1][coluna_zero];
+    matriz[linha_zero+1][coluna_zero] = aux;
 
-    if(caractere == 'A'){
-        //para mover para DIREITA, deve ter algo à esquerda do zero
-        if(coluna_zero==0) //invalido
+    return true;
+
+}
+
+bool mover_esquerda_A(int linhas, int colunas, int matriz[][colunas]){
+    int aux;
+    int linha_zero = posicao_zero('i',linhas, colunas, matriz);
+    int coluna_zero = posicao_zero('j',linhas, colunas, matriz);
+
+    if(coluna_zero==0) //invalido
             return false;
 
-        aux = matriz[linha_zero][coluna_zero];
-        matriz[linha_zero][coluna_zero]  = matriz[linha_zero][coluna_zero-1];
-        matriz[linha_zero][coluna_zero-1] = aux;
-        //origem : coordenadas do zero
-        //destino: mesma linha, coluna_zero-1(esquerda)
-    }
+    //destino: mesma linha, coluna_zero-1(esquerda)
+    aux = matriz[linha_zero][coluna_zero];
+    matriz[linha_zero][coluna_zero]  = matriz[linha_zero][coluna_zero-1];
+    matriz[linha_zero][coluna_zero-1] = aux;
 
-    if(caractere == 'D'){
-        //para mover para ESQUERDA, deve ter algo à direita do zero
-        if(coluna_zero==3) //invalido
-            return false;
+    return true;
 
-        aux = matriz[linha_zero][coluna_zero];
-        matriz[linha_zero][coluna_zero]  = matriz[linha_zero][coluna_zero+1];
-        matriz[linha_zero][coluna_zero+1] = aux;
-        //origem : coordenadas do zero
-        //destino: mesma linha, coluna_zero+1(direita)
-    }
+}
+
+bool mover_direita_D(int linhas, int colunas, int matriz[][colunas]){
+    int aux;
+    int linha_zero = posicao_zero('i',linhas, colunas, matriz);
+    int coluna_zero = posicao_zero('j',linhas, colunas, matriz);
+
+    if(coluna_zero==3) //invalido
+        return false;
+
+    //destino: mesma linha, coluna_zero+1(direita)
+    aux = matriz[linha_zero][coluna_zero];
+    matriz[linha_zero][coluna_zero]  = matriz[linha_zero][coluna_zero+1];
+    matriz[linha_zero][coluna_zero+1] = aux;
+
     return true;
 }
+/* fim das funcoes de movimento */
 
 void embaralhar_tabuleiro(int linhas, int colunas, int matriz[][colunas]){
     char movimento;
     int cont = 0;
+
     while(cont<5){
+    //fazer 5 movimentos validos
         int num = (rand() % 4) + 1;
 
         if(num==1){
-            movimento='W';
-        } else if(num==2){
-            movimento='S';
-        } else if(num==3){
-            movimento='D';
+            if(mover_cima_W(linhas, colunas, matriz)) // as funcoes de movimento retornam true ou false (todas as 4 WASD)
+                cont++;
+        }else if(num==2){
+            if(mover_baixo_S(linhas, colunas, matriz))
+                cont++;
+        }else if(num==3){
+            if(mover_direita_D(linhas, colunas, matriz))
+                cont++;
         }else if(num==4){
-            movimento='A';
+            if(mover_esquerda_A(linhas, colunas, matriz))
+                cont++;
         }
-
-    if(mover(linhas, colunas, matriz, movimento))
-        cont++;
     }
 }
 
@@ -144,7 +160,7 @@ int main(){
 
     embaralhar_tabuleiro(linhas,colunas,matriz);
 
-    bool resultado=false;
+    bool resultado;
 
     printf("\tW move o espaco vazio para cima");
     printf("\n\tS move o espaco vazio para baixo");
@@ -157,18 +173,29 @@ int main(){
         printf("\nEscolha um movimento WSDA: ");
         scanf(" %c",&movimento);
 
-        //testar entrada do usuario
-        if(movimento=='W' || movimento=='S' || movimento=='D' || movimento=='A'){
-            if(mover(linhas, colunas, matriz,movimento)){
-                imp_tabuleiro(linhas, colunas, matriz);
+        bool movimento_executado;
 
-            }else{
-                printf("Movimento invalido!\n");
-            }
+        /* inicio redirecionamento de funcao de movimento pelo caractere enviado */
+        if(movimento=='W'){
+            movimento_executado = mover_cima_W(linhas, colunas, matriz);
 
-        }else{
-            printf("Caracatere invalido!\n");
+        } else if(movimento=='S'){
+            movimento_executado = mover_baixo_S(linhas, colunas, matriz);
+
+        } else if(movimento=='D'){
+            movimento_executado = mover_direita_D(linhas, colunas, matriz);
+
+        } else if(movimento=='A'){
+            movimento_executado = mover_esquerda_A(linhas, colunas, matriz);
         }
+        /* fim do redirecionamento das funcoes de movimento */
+
+
+       if(movimento_executado){
+            imp_tabuleiro(linhas, colunas, matriz);
+       }else{
+            printf("Movimento invalido!\n");
+       }
 
         resultado=vitoria(linhas, colunas, matriz);
 
