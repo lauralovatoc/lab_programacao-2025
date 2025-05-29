@@ -155,7 +155,7 @@ int contar_linhas(FILE* arquivo) {
     /*fechar arquivos*/
     fclose(arq_prova);
     fclose(arq_resultados);
-
+    printf("Resultados disponiveis em resultados.txt");
 }
 
 int main(int argc, char *argv[]){
