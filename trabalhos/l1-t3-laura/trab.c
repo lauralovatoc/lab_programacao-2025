@@ -9,14 +9,18 @@
 #include <time.h>
 
 #define tam 10
+#define arquivo "resultados.txt"
 
 //TODO: 
 //acaba jogo -> le arquivo, grava em uma string (malloc), grava no arquivo(oq foi lido + informações do ultimo game)(malloc)
+//3 vetores (linhas): um de string (nome) e dois de int (etapa e pontuação) 
+// -> funcao grava linha, leitura em linhas, ordena linhas por pontuação 
+
+//mostrar podio
 
 // gravar instruções na tela de jogo(como mexer linhas, como mexer colunas, irá aparecer uma peça nova quando a primeira linha estiver vazia,
-//o objetivo é juntar colunas com celulas de mesma cor e esvaziar o maximo possivel)
-
-//CONSERTAR CRONOMETRO****
+//o objetivo é juntar colunas com celulas de mesma cor e esvaziar o maximo possivel, DEL apaga uma linha(jogador perde 2 pontos))
+//jogador ganha mais pontos ao passar de etapa, e ganha um ponto por scelula retirada
 
 /*
 descrição de como cores e etapas vão funcionar:
@@ -46,12 +50,14 @@ typedef struct {
     retangulo_t contorno_janela;
     tecla_t tecla;
     bool fim;
+    bool inicio; //obs utilizado apenas no primeiro jogo para sair da tela inicial
     bool possivel;
+    bool fechar_programa;
 
     //para registro:
     int pontos; //pontuação final
     int etapa; // etapa do jogo
-    char apelido[100]; //apelido do jogador
+    char apelido[30]; //apelido do jogador
 
     int cont_embaralhadas;
 
@@ -65,6 +71,8 @@ typedef struct {
     double tempo_inicio; 
     double tempo_na_etapa;
     bool tempo_processado;
+
+    rato_t mouse;
 } jogo_t;
 
 cor_t azul_marinho = {0.13, 0.2, 0.8, 1.0};
@@ -76,14 +84,60 @@ retangulo_t fundo = { //retangulo que cobre toda a janela
     .tamanho = {1500,1500}
 };
 
-//funcao inserida para rodar j_relogio em Windows (com máquina virtual Ubuntu) --> tava bugando a função de tempo do allegro
-double j_relogio_novo()
-{
-  struct timespec agora;
-  clock_gettime(CLOCK_REALTIME, &agora);
-  return agora.tv_sec + agora.tv_nsec*1e-9;
+int contar_linhas(){
+    FILE *arq = fopen(arquivo, "r");
+    int linhas = 0;
+    char c;
+
+    if(arq==NULL){
+        fclose(arq);
+        return -1;
+    }
+
+    while ((c = fgetc(arq)) != EOF) {
+        if (c == '\n') {
+            linhas++;
+        }
+    }
+    fclose(arq);//fecha para liberar o arquivo para a proxima funcao
+    return linhas;
 }
 
+/*
+void leitura_arquivo_resultados(){
+    //funcao que le os arquivos que contem os resultados no formato (%d %d %s) -> (etapa pontos nome)
+    int linhas = conta_linhas_arquivo();
+
+    FILE *arq;
+    arq= fopen(arquivo, "r");
+
+    if(arq == NULL){
+        printf("Nao foi possivel ler o arquivo");
+        fclose(arq);
+        return;
+    }
+    //alocar 3 vetores (int int string) com malloc, considerando numero de linhas
+    char *etapa = (int)malloc(linhas * sizeof(int));
+    char *pontos = (int)malloc(linhas * sizeof(int));
+    char *nome = (char)malloc(linhas * 100 *sizeof(char)); ///strings de 100 caracteres, pois nome foi salvo como nome[100] quando registrado
+
+    for(int i=0;i<linhas;i++){
+        int leitura = fscanf(arq, "%d %d %s",etapa, pontos, nome);
+        if(leitura==3){
+            etapa++;
+            pontos++;
+            nome+=100;
+        }else if(leitura == EOF){
+            fclose(arq);
+            break;
+        } else{
+            printf("Arquivo nao segue o padrao esperado");
+            fclose(arq);
+            return;
+        }
+    }
+}
+*/
 cor_t cor_aleatoria(int etapa){
     //seleciona cores aleatorias de acordo com a etapa
     if(etapa>5)
@@ -163,6 +217,7 @@ void inicializa_jogo(jogo_t *jogo){
     jogo->tempo_inicio = j_relogio();
     jogo->tempo_processado = false;
     jogo->cont_embaralhadas = 0;
+    jogo->fechar_programa = false;
     embaralha_tabuleiro(jogo);
 }
 
@@ -179,19 +234,19 @@ void desenha_tela_final(jogo_t *jogo){
 
     j_retangulo(tabela, 2, azul_marinho, cor_fundo);
 
-    char nome[150];
+    char nome[40];
     sprintf(nome, "Jogador: %s", jogo->apelido);
 
     j_seleciona_fonte(NULL, 30);
     j_texto(texto, azul_marinho, nome);
 
-    char pontuacao[50];
+    char pontuacao[40];
     sprintf(pontuacao, "Pontuação: %d", jogo->pontos);
 
     texto.y += 40;
     j_texto(texto, azul_marinho,pontuacao);
 
-    char etapa[50];
+    char etapa[40];
     sprintf(etapa, "Etapa: %d", jogo->etapa);
 
     texto.y += 40;
@@ -210,25 +265,43 @@ void desenha_tela_final(jogo_t *jogo){
     j_seleciona_fonte(NULL, 20);
     j_texto(botao_texto, branco, "JOGAR NOVAMENTE");
 
-    //processa mouse
-    rato_t mouse = j_rato();
-    if(mouse.clicado[0]){
+    //botao para nao jogar mais
+    botao.inicio.y += 100;
+    j_retangulo(botao,0,azul_marinho,azul_marinho);
 
-        if(mouse.posicao.x >= botao.inicio.x && 
-        mouse.posicao.x <= botao.inicio.x + botao.tamanho.largura &&
-        mouse.posicao.y >= botao.inicio.y &&
-        mouse.posicao.y <= botao.inicio.y + botao.tamanho.altura){
-            inicializa_jogo(jogo);
+    botao_texto.y+=100;
+    j_seleciona_fonte(NULL, 20);
+    j_texto(botao_texto, branco, "NAO QUERO JOGAR");
+
+
+    jogo->mouse = j_rato();
+    // desenha um cursor na posição do mouse
+    circulo_t cursor = { jogo->mouse.posicao, 5 };
+    j_circulo(cursor, 3, azul_marinho, azul_marinho);
+
+    //processa mouse
+    if(jogo->mouse.clicado[0]){
+
+        if(jogo->mouse.posicao.x>= botao.inicio.x && 
+        jogo->mouse.posicao.x <= botao.inicio.x + botao.tamanho.largura &&
+        jogo->mouse.posicao.y >= botao.inicio.y -100 &&
+        jogo->mouse.posicao.y <= botao.inicio.y + botao.tamanho.altura -100){
+            inicializa_jogo(jogo); //jogar de novo
+        }
+
+        if(jogo->mouse.posicao.x>= botao.inicio.x && 
+        jogo->mouse.posicao.x <= botao.inicio.x + botao.tamanho.largura &&
+        jogo->mouse.posicao.y >= botao.inicio.y &&
+        jogo->mouse.posicao.y <= botao.inicio.y + botao.tamanho.altura){
+            jogo->fechar_programa = true;//nao quero jogar
         }
     }
-
-
     j_mostra();
 }
 
 void registrar_nome(jogo_t *jogo){
     //armazenar nome do jogador antes da partida começar
-    char nome[100]= "\0";
+    char nome[30]= "\0";
     int tam_nome = 0;
 
     j_seleciona_fonte(NULL, 20);
@@ -270,6 +343,7 @@ void registrar_nome(jogo_t *jogo){
 
 void desenha_tela_inicial(jogo_t *jogo){
     //fundo da tela
+    jogo->mouse = j_rato();
     j_retangulo(fundo, 0, cor_fundo, cor_fundo);
 
     //texto principal
@@ -293,21 +367,23 @@ void desenha_tela_inicial(jogo_t *jogo){
     j_seleciona_fonte(NULL, 20);
     j_texto(texto_principal, branco, "JOGAR");
 
-    j_mostra();
+    // desenha um cursor na posição do mouse
+    circulo_t cursor = { jogo->mouse.posicao, 5 };//posicao do mouse com raio de 5px
+    j_circulo(cursor, 3, azul_marinho, azul_marinho);
 
     //verifica se o o botao foi clicado
-    while(buttonClick == false){
-        rato_t mouse = j_rato();
+    if(buttonClick == false){
 
-        if(mouse.clicado[0] && 
-        mouse.posicao.x >= botao.inicio.x && 
-        mouse.posicao.x <= botao.inicio.x + botao.tamanho.largura &&
-        mouse.posicao.y >= botao.inicio.y &&
-        mouse.posicao.y <= botao.inicio.y + botao.tamanho.altura)
-
+        if(jogo->mouse.clicado[0] && 
+        jogo->mouse.posicao.x >= botao.inicio.x && 
+        jogo->mouse.posicao.x <= botao.inicio.x + botao.tamanho.largura &&
+        jogo->mouse.posicao.y >= botao.inicio.y &&
+        jogo->mouse.posicao.y <= botao.inicio.y + botao.tamanho.altura){
             buttonClick=true;
+            jogo->inicio = true;
+        }      
     }
-
+    j_mostra();
 }
 
 //move a linha selecionada
@@ -472,6 +548,13 @@ void move_coluna(jogo_t *jogo, tecla_t t){
     }
 }
 
+void apaga_linha(jogo_t *jogo){
+    for(int j=0;j<tam;j++){
+        tabuleiro[jogo->lin_atual][j] = branco;
+    }
+    jogo->pontos-=2;
+}
+
 /*
 descrição de como as teclas funcionam:
 
@@ -480,6 +563,7 @@ se for linhas:
     T_BAIXO = seleciona linha abaixo
     T_ESQUERDA: linha roda pra esquerda
     T_DIREITA: linha roda pra direita
+    T_DEL: apaga linha
 
 se for colunas:
     T_ESQUERDA: vai para coluna da esquerda
@@ -512,6 +596,11 @@ void processa_teclado(jogo_t *jogo){
                 //funcao que roda a linha para a direita
                 arrasta_linha(jogo,1);
             }
+
+            if(t == T_DEL){
+                //apagar linha -> jogador perde 2 pontos
+                apaga_linha(jogo);
+            }
         }
 
         //colunas
@@ -526,7 +615,7 @@ void processa_teclado(jogo_t *jogo){
                 selecionar_coluna(jogo, false);
             }
 
-            if(t == T_A || t == T_D){
+            if(t == T_A || t == T_D){ //IMPORTANTE: declarei essas teclas na biblioteca
                 //passa primeira celula para topo da coluna vizinha
                 move_coluna(jogo, t);
             }
@@ -541,28 +630,29 @@ retangulo_t but_desistir = {.inicio = {800, 800},.tamanho = {130, 60}}; //jogo->
 
 void processa_mouse(jogo_t *jogo){
 //identifica se o jogador clicou em algum dos botoes (linha/coluna/desistir) durante a tela de jogo
-    rato_t mouse = j_rato();
-    if(mouse.clicado[0]){
+    jogo->mouse = j_rato();
+
+    if(jogo->mouse.clicado[0]){
 
         //botao linhas
-        if(mouse.posicao.x >= but_lin.inicio.x && 
-        mouse.posicao.x <= but_lin.inicio.x + but_lin.tamanho.largura &&
-        mouse.posicao.y >= but_lin.inicio.y &&
-        mouse.posicao.y <= but_lin.inicio.y + but_lin.tamanho.altura)
+        if(jogo->mouse.posicao.x >= but_lin.inicio.x && 
+        jogo->mouse.posicao.x <= but_lin.inicio.x + but_lin.tamanho.largura &&
+        jogo->mouse.posicao.y >= but_lin.inicio.y &&
+        jogo->mouse.posicao.y <= but_lin.inicio.y + but_lin.tamanho.altura)
             jogo->lin = true;
 
         //botao colunas
-        if(mouse.posicao.x >= but_col.inicio.x && 
-        mouse.posicao.x <= but_col.inicio.x + but_col.tamanho.largura &&
-        mouse.posicao.y >= but_col.inicio.y &&
-        mouse.posicao.y <= but_col.inicio.y + but_col.tamanho.altura)
+        if(jogo->mouse.posicao.x >= but_col.inicio.x && 
+        jogo->mouse.posicao.x <= but_col.inicio.x + but_col.tamanho.largura &&
+        jogo->mouse.posicao.y >= but_col.inicio.y &&
+        jogo->mouse.posicao.y <= but_col.inicio.y + but_col.tamanho.altura)
             jogo->lin = false;
 
         //botao desistir
-        if(mouse.posicao.x>=but_desistir.inicio.x &&
-        mouse.posicao.x<= but_desistir.inicio.x + but_desistir.tamanho.largura &&
-        mouse.posicao.y>= but_desistir.inicio.y &&
-        mouse.posicao.y<= but_desistir.inicio.y + but_desistir.tamanho.altura)
+        if(jogo->mouse.posicao.x>=but_desistir.inicio.x &&
+        jogo->mouse.posicao.x<= but_desistir.inicio.x + but_desistir.tamanho.largura &&
+        jogo->mouse.posicao.y>= but_desistir.inicio.y &&
+        jogo->mouse.posicao.y<= but_desistir.inicio.y + but_desistir.tamanho.altura)
             jogo->fim = true;
     }
 }
@@ -658,6 +748,10 @@ void imprime_tabuleiro(jogo_t *jogo){
     sprintf(str_tempo, "TEMPO: %.0f s", jogo->tempo_na_etapa);
     j_seleciona_fonte(NULL, 20);
     j_texto(tempo, azul_marinho, str_tempo);
+
+    // desenha um cursor na posição do mouse
+    circulo_t cursor = { jogo->mouse.posicao, 5 };//posicao do mouse com raio de 5px
+    j_circulo(cursor, 3, azul_marinho, azul_marinho);
 
     j_mostra();
 }
@@ -785,6 +879,7 @@ void processa_tempo(jogo_t *jogo){
     }
 }
 
+
 int main(void){
     srand(time(NULL));
 
@@ -793,7 +888,10 @@ int main(void){
     j_inicializa(jogo.tamanho_janela, "Jogo: Laura Lovato, CC1");
 
     //desenha uma tela inicial
-    desenha_tela_inicial(&jogo);
+    jogo.inicio = false;
+    while(!jogo.inicio){
+        desenha_tela_inicial(&jogo);
+    }    
     
     //registra o nome do jogador
     registrar_nome(&jogo);
@@ -815,9 +913,6 @@ int main(void){
         verifica_buracos();
         
         processa_tempo(&jogo);
-
-        printf("tempo_inicio: %.2f, relogio atual: %.2f, tempo_na_etapa: %.2f\n",jogo.tempo_inicio, j_relogio(), jogo.tempo_na_etapa);
-
         processa_teclado(&jogo); 
         processa_mouse(&jogo);
 
@@ -830,8 +925,9 @@ int main(void){
         }
 
         while(jogo.fim){
-            desenha_tela_final(&jogo); 
-       }
+            desenha_tela_final(&jogo);
+            if(jogo.fechar_programa) break; 
+        }
     }
     //desenha_podio(); //usa mesma funcao para ler aquivo, seleciona os 5 primeiros lugares e imprime
     j_finaliza();
