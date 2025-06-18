@@ -8,14 +8,9 @@
 #include <string.h>
 #include <time.h>
 
-#define tam 10
+#define tam 7
 #define arquivo "resultados.txt"
-
-//TODO: 
-//acaba jogo -> le arquivo, grava em uma string (malloc), grava no arquivo(oq foi lido + informações do ultimo game)(malloc)
-//3 vetores (linhas): um de string (nome) e dois de int (etapa e pontuação) 
-// -> funcao grava linha, leitura em linhas, ordena linhas por pontuação 
-
+//TODO:
 //mostrar podio
 
 // gravar instruções na tela de jogo(como mexer linhas, como mexer colunas, irá aparecer uma peça nova quando a primeira linha estiver vazia,
@@ -75,16 +70,78 @@ typedef struct {
     rato_t mouse;
 } jogo_t;
 
+//cores basicas para interface
 cor_t azul_marinho = {0.13, 0.2, 0.8, 1.0};
 cor_t cor_fundo = {0.48, 0.67, 0.88, 1.0};
 cor_t branco = {1.0, 1.0, 1.0, 1.0};
 
-retangulo_t fundo = { //retangulo que cobre toda a janela
+retangulo_t fundo = { //retangulo que cobre toda a janela (background)
     .inicio = {0, 0},
     .tamanho = {1500,1500}
 };
 
-int contar_linhas(){
+void grava_arquivo(char **nome, int *etapa, int *pontos, int linhas){
+    //grava o resultado final
+    FILE *arq = fopen(arquivo, "w");
+
+    if(arq == NULL){
+        printf("Noa foi possivel abrir o arquivo");
+        fclose(arq);
+        return;
+    }
+
+    for(int i=0;i<linhas;i++){
+        fprintf(arq, "%d %d %s\n", etapa[i], pontos[i], nome[i]);
+    }
+
+    fclose(arq);
+}
+
+int index_menor(int *pontos,int limite){
+    //acha a menor pontuação dentro do vetor e retorna seu endereco
+    int menor = pontos[0];
+    int i_menor = 0;
+
+    for(int i=1;i<=limite;i++){
+        if(pontos[i]< menor){
+            menor = pontos[i];
+            i_menor = i;
+        }
+    }
+    return i_menor;
+}
+
+void trocar_int(int *vet, int origem , int destino){
+    //faz processo de trocar para um vetor de inteiros
+    int aux = vet[origem];
+    vet[origem] = vet[destino];
+    vet[destino] = aux;
+}
+
+void trocar_string(char **vet, int i, int j) {
+    //faz processo de troca para um vetor de strings, considerando strings um vetor de caracteres
+    char aux[30];
+    strcpy(aux, vet[i]);
+    strcpy(vet[i], vet[j]);
+    strcpy(vet[j], aux);
+}
+
+void ordenar_valores(char **nome, int *etapa, int *pontos, int linhas) {
+    //ordenacao: acha o menor valor coloca no final -> acha o proximo menor valor excluindo o ultimo(menor absoluto)
+    int ultimo = linhas-1;
+    for(int i=0;i<linhas-1;i++){
+        //acha o menor numero do vetor pontos e depois aloca todos os vetores igualmente de acordo com nova ordenação
+        int idx_menor = index_menor(pontos, ultimo);
+        
+        trocar_string(nome, idx_menor, ultimo);
+        trocar_int(etapa, idx_menor, ultimo);
+        trocar_int(pontos, idx_menor, ultimo);
+
+        ultimo--;
+    }
+}
+
+int contar_linhas_arquivo(){
     FILE *arq = fopen(arquivo, "r");
     int linhas = 0;
     char c;
@@ -103,41 +160,46 @@ int contar_linhas(){
     return linhas;
 }
 
-/*
-void leitura_arquivo_resultados(){
+void leitura_arquivo_resultados(char ***ptr_nome, int **ptr_etapa, int **ptr_pontos, jogo_t *jogo, int *linhas){
     //funcao que le os arquivos que contem os resultados no formato (%d %d %s) -> (etapa pontos nome)
-    int linhas = conta_linhas_arquivo();
+    *linhas = contar_linhas_arquivo();
 
-    FILE *arq;
-    arq= fopen(arquivo, "r");
-
-    if(arq == NULL){
-        printf("Nao foi possivel ler o arquivo");
-        fclose(arq);
-        return;
-    }
     //alocar 3 vetores (int int string) com malloc, considerando numero de linhas
-    char *etapa = (int)malloc(linhas * sizeof(int));
-    char *pontos = (int)malloc(linhas * sizeof(int));
-    char *nome = (char)malloc(linhas * 100 *sizeof(char)); ///strings de 100 caracteres, pois nome foi salvo como nome[100] quando registrado
+    //linhas  + 1 para poder guardar espaço para o jogo atual
+    int *etapa = malloc((*linhas + 1) * sizeof(int));
+    int *pontos = malloc((*linhas + 1) * sizeof(int));
+    char **nome = malloc((*linhas + 1) * sizeof(char*));
 
-    for(int i=0;i<linhas;i++){
-        int leitura = fscanf(arq, "%d %d %s",etapa, pontos, nome);
-        if(leitura==3){
-            etapa++;
-            pontos++;
-            nome+=100;
-        }else if(leitura == EOF){
-            fclose(arq);
-            break;
-        } else{
-            printf("Arquivo nao segue o padrao esperado");
-            fclose(arq);
-            return;
-        }
+    for (int i = 0; i <= *linhas; i++) {
+        nome[i] = malloc(30 * sizeof(char)); // Aloca espaço para cada nome --> string de no max 30 char
     }
+
+    FILE *arq = fopen(arquivo, "r");
+    if (arq != NULL) {
+        for (int i = 0; i < *linhas; i++) {
+            int leitura = fscanf(arq, "%d %d %29s", &etapa[i], &pontos[i], nome[i]);//%29s pois um caractere é guardado par /0
+            //&nome[i] é errado pois nome é um ponteiro de ponteiro
+            if (leitura != 3) {
+                printf("Arquivo nao segue o padrao esperado\n");
+                fclose(arq);
+                return;
+            }
+        }
+        fclose(arq);
+    }
+
+    //adiciona os resultados
+    etapa[*linhas] = jogo->etapa;
+    pontos[*linhas] = jogo->pontos;
+    strcpy(nome[*linhas], jogo->apelido);
+    (*linhas)++; //atualiza numero de linhas
+
+    //atualiza os ponteiros da função main
+    *ptr_etapa = etapa;
+    *ptr_pontos = pontos;
+    *ptr_nome = nome;
 }
-*/
+
 cor_t cor_aleatoria(int etapa){
     //seleciona cores aleatorias de acordo com a etapa
     if(etapa>5)
@@ -686,7 +748,7 @@ void imprime_tabuleiro(jogo_t *jogo){
         retangulo_t selecao ={
             //refazer medidas depois
             .inicio = {inicio_x + (jogo->col_atual * tam_lin_x), inicio_y},
-            .tamanho = {tam_lin_x + 10, tam_lin_y*10 + 10}
+            .tamanho = {tam_lin_x + 10, tam_lin_y*tam + 10}
         };
 
         j_retangulo(selecao, 0,azul_marinho,azul_marinho);
@@ -879,8 +941,11 @@ void processa_tempo(jogo_t *jogo){
     }
 }
 
-
 int main(void){
+    int *etapa, *pontos;
+    char **nome;
+    int linhas;
+
     srand(time(NULL));
 
     jogo_t jogo;
@@ -919,9 +984,22 @@ int main(void){
         imprime_tabuleiro(&jogo);
 
         if(jogo.fim){
-            //le arquivo de resultados e armazena (malloc) em uma string 
-            //ordena resultados por pontuação
-            //grava arquivo (string lida  + resultados do ultimo jogo)
+            //le arquivo e faz vetores alocados dinamicamente, adiciona jogo atual
+            leitura_arquivo_resultados(&nome, &etapa, &pontos, &jogo, &linhas);
+            
+            //ordena todos as linhas de resultado baseado nas maiores pontuações
+            ordenar_valores(nome, etapa, pontos, linhas);
+
+            //gravar valores ordenados linha por linha no arquivo
+            grava_arquivo(nome, etapa, pontos, linhas);
+           
+           //liberando memoria
+            for (int i = 0; i < linhas; i++) {
+                free(nome[i]);
+            }
+            free(nome);
+            free(etapa);
+            free(pontos);
         }
 
         while(jogo.fim){
