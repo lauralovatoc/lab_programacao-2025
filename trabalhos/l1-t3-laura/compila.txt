@@ -1,4 +1,2 @@
-# compilar e rodar o programa em windows com máquina virtual ubuntu wsl
-cd /mnt/c/Users/laura/Downloads/l1-t3-laura
-gcc -Wall -o trab trab.c janela.c -lallegro_font -lallegro_color -lallegro_ttf -lallegro_primitives -lallegro
-./trab
+# compilar
+gcc -Wall -o l1-t3-laura l1-t3-laura.c janela.c -lallegro_font -lallegro_color -lallegro_ttf -lallegro_primitives -lallegro
